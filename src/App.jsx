@@ -1,7 +1,11 @@
-import Home from "./pages/Home.js"
+import CodeEditor from "./components/CodeEditor"
 
 function App() {
-  return <Home />
+  return (
+    <div>
+      <CodeEditor />
+    </div>
+  )
 }
 
 export default App

@@ -1,5 +1,7 @@
 const express = require("express")
 const cors = require("cors")
+const http = require("http")
+const { Server } = require("socket.io")
 const { exec } = require("child_process")
 
 const app = express()
@@ -7,32 +9,37 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-// Home Route
-app.get("/", (req, res) => {
-  res.send("Code Execution Backend Running")
+const server = http.createServer(app)
+
+const io = new Server(server, {
+  cors: {
+    origin: "*"
+  }
 })
 
-// Code Execution Route
-app.post("/run", (req, res) => {
+io.on("connection", (socket) => {
 
-  const code = req.body.code
+  console.log("User Connected")
 
-  exec(`node -e "${code}"`, (error, stdout, stderr) => {
+  socket.on("runCode", (code) => {
 
-    if (error) {
-      return res.json({
-        error: stderr
-      })
-    }
+    exec(
+      `node -e "${code.replace(/"/g, '\\"')}"`,
+      (error, stdout, stderr) => {
 
-    res.json({
-      output: stdout
-    })
+        if (error) {
+          socket.emit("codeOutput", stderr)
+        } else {
+          socket.emit("codeOutput", stdout)
+        }
+
+      }
+    )
 
   })
 
 })
 
-app.listen(5000, () => {
+server.listen(5000, () => {
   console.log("Server running on port 5000")
 })
