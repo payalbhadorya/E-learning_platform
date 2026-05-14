@@ -4,10 +4,17 @@ const http = require("http")
 const { Server } = require("socket.io")
 const { exec } = require("child_process")
 
+const mongoose = require("mongoose")
+const Progress = require("./models/Progress")
+
 const app = express()
 
 app.use(cors())
 app.use(express.json())
+
+mongoose.connect("mongodb://127.0.0.1:27017/elearning")
+.then(() => console.log("MongoDB Connected"))
+.catch((err) => console.log(err))
 
 const server = http.createServer(app)
 
@@ -37,6 +44,24 @@ io.on("connection", (socket) => {
     )
 
   })
+
+})
+
+app.post("/progress", async (req, res) => {
+
+  const progress = new Progress(req.body)
+
+  await progress.save()
+
+  res.json(progress)
+
+})
+
+app.get("/progress", async (req, res) => {
+
+  const progress = await Progress.find()
+
+  res.json(progress)
 
 })
 
